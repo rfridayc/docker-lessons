@@ -1,0 +1,28 @@
+# Use the official .NET Core SDK image as the base image
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy .csproj files and restore dependencies
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy the remaining source files and build the application
+COPY . ./
+RUN dotnet publish -c Release -o out
+
+# Use the official .NET Core Runtime image as the base image for the final stage
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the build output from the previous stage
+COPY --from=build /app/out ./
+
+# Expose the application port
+EXPOSE 80
+
+# Start the application
+ENTRYPOINT ["dotnet", "firstapi.dll"]
